@@ -12,7 +12,6 @@ library(tidyverse)
 
 # Download daily covid-19 data from Github
 # Data was collected by CSSE at Johns Hopkins University
-
 date <- '09-11-2020'
 covid_url <- paste0('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/',
                     date,'.csv')
