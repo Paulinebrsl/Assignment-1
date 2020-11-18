@@ -10,7 +10,7 @@ library(tidyverse)
 # Read the raw files
 my_path <- "~/Documents/GitHub/Assignment-1/data/"
 # covid data
-cv <- read_csv(paste0(my_path,'raw/covid_09_11_2020_raw.csv'))
+cv <- read_csv(paste0(my_path,'raw/covid_10_15_2020_raw.csv'))
 # population data
 pop <- read_csv(paste0(my_path,'raw/pop_WDI_2019.csv'))
 
@@ -131,4 +131,4 @@ df <- df %>% filter( !( is.na( population ) | is.na( confirmed ) | is.na( death 
 #####
 # Save clean data
 # COVID data
-write_csv( df , paste0(my_path,'clean/covid_pop_09_11_2020_clean.csv'))
+write_csv( df , paste0(my_path,'clean/covid_pop_10_15_2020_clean.csv'))
