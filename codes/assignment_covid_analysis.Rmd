@@ -1,0 +1,130 @@
+---
+title: "Assignment 1 for Data Analysis 2 and Coding with R"
+date: 2020-11-24
+author: "Pauline Broussolle"
+output: 
+  pdf_document:
+  toc: true
+  toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Load packages
+library(tidyverse)
+require(scales)
+library(lspline)
+library(estimatr)
+library(texreg)
+library(ggthemes)
+library(WDI)
+library(magrittr)
+library(moments)
+library(gridExtra)
+
+# Import data
+data_in <- "~/Documents/GitHub/Assignment-1/data/"
+df <- read_csv(paste0(data_in,"clean/covid_pop_10_15_2020_clean.csv"))
+```
+
+## Introduction
+
+The aim of the analysis is to analyse the pattern of association between registered covid-19 cases and registered number of death due to covid-19 on a **15/10/2020**. 
+My dependent variable (y) is the **number of registered death due to covid** and my explanatory variable (x) is the **number of registered cases**. The aim of the analysis is to create a report on the pattern of association, choose and interpret a regression model and refer to robustness checks.
+
+Introduction of the dataset and variables
+The aim of this assignment is to guide you through in creating a short report on the pattern of association. You will need to chose your final model, interpret the results and  
+### Executive summary
+
+## 1. Summary statistics and Distribution for x and y
+
+```{r , echo = FALSE }
+confirmed_cases <- df %>% 
+  summarise(
+  mean     = round( mean(confirmed), 0),
+  median   = median(confirmed),
+  min      = min(confirmed),
+  max      = max(confirmed),
+  std      = round( sd(confirmed), 0))
+
+nb_of_death <- df %>% 
+  summarise(
+  mean     = round( mean(death), 0),
+  median   = median(death),
+  min      = min(death),
+  max      = max(death),
+  std      = round( sd(death), 0))
+
+
+summary <- confirmed_cases %>% add_row( nb_of_death)
+summary <- mutate (summary, variable = c("confirmed cases" , "nb of death"))
+knitr::kable(summary,caption="Summary for the number of registered death and registered cases")
+```
+
+2-3 sentence, explain the main features and distribution - use histograms and summary statistics table (mean, median, min, max, standard deviation)
+ 
+```{r , echo = FALSE, out.width = '50%' }
+# Histograms
+ggplot(data = df, aes(x=death)) + 
+  geom_histogram(binwidth =1000,col="black", alpha=0.7)+
+  labs(x="number of registered death due to covid", y="Absolute Frequency") +
+  theme_bw()
+
+ggplot(data = df, aes(x=confirmed)) + 
+  geom_histogram(binwidth =10000, fill= "darkorange",col="black", alpha=0.7)+
+  labs(x="number of registered cases", y="Absolute Frequency") +
+  theme_bw()
+```
+
+### Select or drop observations, checking extreme values
+```{r , include = FALSE }
+df %>% filter( confirmed > 2000000, death > 50000 )
+```
+We check countries which have confirmed cases aboves 2 milion and registered number of death above 50,000. These are India, Brazil and United States, which are not measurement errors. We keep these values.
+
+## 2. Investigate the transformation of your variables
+### Scaling
+
+```{r , echo = FALSE, out.width = '33%'  }
+# Check basic scatter-plots!
+#   Two competing models:
+#     1) death = alpha + beta * confirmed
+#     2) death = alpha + beta * confirmedsc
+#
+# Where to use log-transformation? - level-level vs level-log vs log-level vs log-log
+#
+# 1) lifeexp - gdptot: level-level model without scaling
+ggplot( df , aes(x = confirmedsc, y = death)) +
+  geom_point() +
+  geom_smooth(method="loess")+
+  labs(x = "nb of confirmed cases",y = "nb of death") 
+
+# The pattern seems non-linear and there are some extreme observations, corresponding to China, US, India
+
+# You can change the scale for Total GDP for checking log-transformation
+ggplot( df , aes(x = confirmed, y = death)) +
+  geom_point() +
+  geom_smooth(method="loess")+
+  labs(x = "nb of confirmed cases",y = "nb of death")+
+  scale_x_continuous( trans = log_trans(),  breaks = c(1,2,5,10,20,50,100,200,500,1000,10000) )
+
+# You can change the scale for Total GDP and life-expectancy for checking log-log transformation
+ggplot( df , aes(x = confirmed, y = death)) +
+  geom_point() +
+  geom_smooth(method="loess")+
+  labs(x = "nb of confirmed cases",y = "nb of death")+
+  scale_x_continuous( trans = log_trans(),  breaks = c(1,2,5,10,20,50,100,200,500,1000,10000) )+
+  scale_y_continuous( trans = log_trans() )
+```
+
+Estimating different models
+
+Presentation of model choice 
+
+Hypothesis testing on beta (which interacts with x)
+
+Analysis of the residuals
+
+Conclusion
+
