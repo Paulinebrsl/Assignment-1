@@ -33,20 +33,16 @@ df <- read_csv(paste0(data_in,"clean/covid_pop_10_15_2020_clean.csv"))
 
 ## Introduction
 
-- Introduction of the data
+We analyse covid data from CSSE at Johns Hopkins University and we use also population data for 2019 from World Bank (using WDI). The dataset contains 182 countries and registers the number of confirmed covid cases and number of death due by covid on 15/10/2020.
 
-  - Outcome variable: **number of registered death due to covid**
-  - Explanatory variable: **number of registered cases**
-  - Potential data cleaning (1-2 bullet points)
-
-My goal is to analyse the pattern of association between registered covid-19 cases and registered number of death due to covid-19 on **15/10/2020**. 
-The aim of the analysis is to create a report on the pattern of association, choose and interpret a regression model and refer to robustness checks.
+My outcome variable is the **number of registered death due to covid** and my explanatory variable: **number of registered cases**. My goal is to analyse the pattern of association between registered covid-19 cases and registered number of death due to covid-19 on **15/10/2020**. 
 
 ## Executive summary
 
 ## 1. Summary statistics and Distribution for x and y
 
 ```{r , include = FALSE }
+glimpse (df)
 summary(df)
 ```
 
@@ -73,24 +69,25 @@ summary <- confirmed_cases %>% add_row( nb_of_death)
 summary <- mutate (summary, variable = c("confirmed cases" , "nb of death"))
 knitr::kable(summary,caption="Summary for the number of registered death caused by covid and registered covid cases")
 ```
-
-2-3 sentence, explain the main features and distribution - use histograms and summary statistics table (mean, median, min, max, standard deviation)
  
 ```{r , echo = FALSE, out.width = '50%' }
 # Histograms
 ggplot(data = df, aes(x=death)) + 
-  geom_histogram(binwidth =1000,col="black", alpha=0.7)+
+  geom_histogram(binwidth =5000,fill= "darkorange", col="black", alpha=0.7)+
   labs(x="number of registered death due to covid", y="Absolute Frequency") +
   theme_bw()
 
 ggplot(data = df, aes(x=confirmed)) + 
-  geom_histogram(binwidth =10000, fill= "darkorange",col="black", alpha=0.7)+
+  geom_histogram(binwidth =100000, fill= "darkorange",col="black", alpha=0.7)+
   labs(x="number of registered covid cases", y="Absolute Frequency") +
   theme_bw()
 ```
 
-### Select or drop observations, checking extreme values
-```{r , inclue = FALSE }
+2-3 sentence, explain the main features and distribution - use histograms and summary statistics table (mean, median, min, max, standard deviation)
+We see that there are a few extreme values.
+
+### Chech extreme values
+```{r , include = FALSE }
 df %>% filter( confirmed > 2000000, death > 50000 )
 ```
 
@@ -144,18 +141,18 @@ i. Take care when it is possible to make ln transformation: you may need to drop
     - Statistical: you can compare models with the same y, no better fit
     - Remember: simplest the better!
 
-We should use the log-log transformation, which is the only to provide a linear pattern.
 
+We should use the log-log transformation, which is the only to provide a linear pattern.
 We create new variables which are ln_confirmed and ln_death .
 ```{r , include = FALSE}
-# Take Log 
+# Take Logs 
 df <- df %>% mutate( ln_confirmed = log( confirmed ),
                      ln_death = log( death ) )
 df <- subset(df, ln_death!= -Inf)
 ```
 
 ## 3. Estimating different models
-I chose the log transformation : ln_death = alpha + beta*ln_confirmed
+We choose the log transformation. We estimate four different regression models: Simple linear regression, Quadratic regression, Piecewise linear spline regression, Weighted linear regression (using population as weights).
 
 ```{r , include = FALSE }
 # Simple linear regression
@@ -207,7 +204,8 @@ htmlreg( list(reg1 , reg2 , reg3 , reg4),
 
 The model comparison (all the estimated model results) is reported in the appendix of the report.
 
-### Weighted linear regression, using population as weights. 
+The best model is Weighted linear regression, using population as weights:
+reg4: ln_death = alpha + beta * ln_confirmed, weights: population
 ```{r , echo = FALSE, fig.height=3.0, fig.width=3.0 }
 # Weighted-OLS
 reg4 <- lm_robust(ln_death ~ ln_confirmed, data = df , weights = population)
@@ -215,6 +213,7 @@ summary( reg4 )
 
 ggplot(data = df, aes(x = ln_confirmed, y = ln_death)) +
   geom_point(data = df, aes(size=population),  color = 'blue', shape = 16, alpha = 0.6,  show.legend=F) +
+  labs(x = "confirmed cases,ln scale",y = "nb of death, ln scale", title="Weighted linear regression, using population as weights")+
   geom_smooth(aes(weight = population), method = "lm", color='red')
 ```
 
@@ -266,9 +265,7 @@ knitr::kable(u1,caption="Countries with largest positive errors")
 
 ```{r, results = 'asis', echo = FALSE}
 texreg(reg1,
-              custom.model.names = c("Linear model","Quadratic model",
-                                "PLS model", "Weighted linear model"),
-       caption = "Modelling number of registered death due to covid and number of confirmed covid cases", 
+              custom.model.names = c("Linear model"),
        table = FALSE, use.packages = FALSE)
 
 ```
