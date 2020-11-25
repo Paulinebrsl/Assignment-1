@@ -1,0 +1,117 @@
+<table class="texreg" style="margin: 10px auto;border-collapse: collapse;border-spacing: 0px;caption-side: bottom;color: #000000;border-top: 2px solid #000000;">
+<caption>Modelling number of registered death due to covid and number of confirmed covid cases</caption>
+<thead>
+<tr>
+<th style="padding-left: 5px;padding-right: 5px;">&nbsp;</th>
+<th style="padding-left: 5px;padding-right: 5px;">Linear model</th>
+<th style="padding-left: 5px;padding-right: 5px;">Quadratic model</th>
+<th style="padding-left: 5px;padding-right: 5px;">PLS model</th>
+<th style="padding-left: 5px;padding-right: 5px;">Weighted linear model</th>
+</tr>
+</thead>
+<tbody>
+<tr style="border-top: 1px solid #000000;">
+<td style="padding-left: 5px;padding-right: 5px;">(Intercept)</td>
+<td style="padding-left: 5px;padding-right: 5px;">-31379.52<sup>**</sup></td>
+<td style="padding-left: 5px;padding-right: 5px;">61413.49<sup>**</sup></td>
+<td style="padding-left: 5px;padding-right: 5px;">33284.17</td>
+<td style="padding-left: 5px;padding-right: 5px;">-198554.10<sup>***</sup></td>
+</tr>
+<tr>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+<td style="padding-left: 5px;padding-right: 5px;">(10673.47)</td>
+<td style="padding-left: 5px;padding-right: 5px;">(23486.53)</td>
+<td style="padding-left: 5px;padding-right: 5px;">(41196.31)</td>
+<td style="padding-left: 5px;padding-right: 5px;">(39247.56)</td>
+</tr>
+<tr>
+<td style="padding-left: 5px;padding-right: 5px;">ln_confirmed</td>
+<td style="padding-left: 5px;padding-right: 5px;">3891.49<sup>**</sup></td>
+<td style="padding-left: 5px;padding-right: 5px;">-18935.71<sup>**</sup></td>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+<td style="padding-left: 5px;padding-right: 5px;">19167.29<sup>***</sup></td>
+</tr>
+<tr>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+<td style="padding-left: 5px;padding-right: 5px;">(1239.29)</td>
+<td style="padding-left: 5px;padding-right: 5px;">(6236.42)</td>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+<td style="padding-left: 5px;padding-right: 5px;">(3480.70)</td>
+</tr>
+<tr>
+<td style="padding-left: 5px;padding-right: 5px;">ln_confirmed_sq</td>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+<td style="padding-left: 5px;padding-right: 5px;">1272.92<sup>**</sup></td>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+</tr>
+<tr>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+<td style="padding-left: 5px;padding-right: 5px;">(382.06)</td>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+</tr>
+<tr>
+<td style="padding-left: 5px;padding-right: 5px;">lspline(ln_confirmed, cutoff_ln)1</td>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+<td style="padding-left: 5px;padding-right: 5px;">-13903.57</td>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+</tr>
+<tr>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+<td style="padding-left: 5px;padding-right: 5px;">(11412.68)</td>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+</tr>
+<tr>
+<td style="padding-left: 5px;padding-right: 5px;">lspline(ln_confirmed, cutoff_ln)2</td>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+<td style="padding-left: 5px;padding-right: 5px;">4632.40<sup>**</sup></td>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+</tr>
+<tr>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+<td style="padding-left: 5px;padding-right: 5px;">(1438.66)</td>
+<td style="padding-left: 5px;padding-right: 5px;">&nbsp;</td>
+</tr>
+<tr style="border-top: 1px solid #000000;">
+<td style="padding-left: 5px;padding-right: 5px;">R<sup>2</sup></td>
+<td style="padding-left: 5px;padding-right: 5px;">0.21</td>
+<td style="padding-left: 5px;padding-right: 5px;">0.53</td>
+<td style="padding-left: 5px;padding-right: 5px;">0.24</td>
+<td style="padding-left: 5px;padding-right: 5px;">0.63</td>
+</tr>
+<tr>
+<td style="padding-left: 5px;padding-right: 5px;">Adj. R<sup>2</sup></td>
+<td style="padding-left: 5px;padding-right: 5px;">0.20</td>
+<td style="padding-left: 5px;padding-right: 5px;">0.53</td>
+<td style="padding-left: 5px;padding-right: 5px;">0.23</td>
+<td style="padding-left: 5px;padding-right: 5px;">0.62</td>
+</tr>
+<tr>
+<td style="padding-left: 5px;padding-right: 5px;">Num. obs.</td>
+<td style="padding-left: 5px;padding-right: 5px;">182</td>
+<td style="padding-left: 5px;padding-right: 5px;">182</td>
+<td style="padding-left: 5px;padding-right: 5px;">182</td>
+<td style="padding-left: 5px;padding-right: 5px;">182</td>
+</tr>
+<tr style="border-bottom: 2px solid #000000;">
+<td style="padding-left: 5px;padding-right: 5px;">RMSE</td>
+<td style="padding-left: 5px;padding-right: 5px;">20505.19</td>
+<td style="padding-left: 5px;padding-right: 5px;">15799.10</td>
+<td style="padding-left: 5px;padding-right: 5px;">20162.08</td>
+<td style="padding-left: 5px;padding-right: 5px;">236859144.89</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td style="font-size: 0.8em;" colspan="5"><sup>***</sup>p &lt; 0.001; <sup>**</sup>p &lt; 0.01; <sup>*</sup>p &lt; 0.05</td>
+</tr>
+</tfoot>
+</table>

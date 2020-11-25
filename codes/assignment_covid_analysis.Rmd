@@ -30,14 +30,21 @@ df <- read_csv(paste0(data_in,"clean/covid_pop_10_15_2020_clean.csv"))
 
 ## Introduction
 
-The aim of the analysis is to analyse the pattern of association between registered covid-19 cases and registered number of death due to covid-19 on a **15/10/2020**. 
+My goal is to analyse the pattern of association between registered covid-19 cases and registered number of death due to covid-19 on **15/10/2020**. 
 My dependent variable (y) is the **number of registered death due to covid** and my explanatory variable (x) is the **number of registered cases**. The aim of the analysis is to create a report on the pattern of association, choose and interpret a regression model and refer to robustness checks.
 
 Introduction of the dataset and variables
 The aim of this assignment is to guide you through in creating a short report on the pattern of association. You will need to chose your final model, interpret the results and  
-### Executive summary
+## Executive summary
 
-## 1. Summary statistics and Distribution for x and y
+## 1. Preparatory Data Analysis
+
+### Summary statistics and Distribution for x and y
+
+```{r , include = FALSE }
+summary(df)
+```
+
 
 ```{r , echo = FALSE }
 confirmed_cases <- df %>% 
@@ -59,7 +66,7 @@ nb_of_death <- df %>%
 
 summary <- confirmed_cases %>% add_row( nb_of_death)
 summary <- mutate (summary, variable = c("confirmed cases" , "nb of death"))
-knitr::kable(summary,caption="Summary for the number of registered death and registered cases")
+knitr::kable(summary,caption="Summary for the number of registered death caused by covid and registered covid cases")
 ```
 
 2-3 sentence, explain the main features and distribution - use histograms and summary statistics table (mean, median, min, max, standard deviation)
@@ -73,7 +80,7 @@ ggplot(data = df, aes(x=death)) +
 
 ggplot(data = df, aes(x=confirmed)) + 
   geom_histogram(binwidth =10000, fill= "darkorange",col="black", alpha=0.7)+
-  labs(x="number of registered cases", y="Absolute Frequency") +
+  labs(x="number of registered covid cases", y="Absolute Frequency") +
   theme_bw()
 ```
 
@@ -83,44 +90,99 @@ df %>% filter( confirmed > 2000000, death > 50000 )
 ```
 We check countries which have confirmed cases aboves 2 milion and registered number of death above 50,000. These are India, Brazil and United States, which are not measurement errors. We keep these values.
 
-## 2. Investigate the transformation of your variables
-### Scaling
+## 2. Investigate the transformation of the variables
+### Scaling, Take Logs?
 
-```{r , echo = FALSE, out.width = '33%'  }
-# Check basic scatter-plots!
-#   Two competing models:
-#     1) death = alpha + beta * confirmed
-#     2) death = alpha + beta * confirmedsc
-#
-# Where to use log-transformation? - level-level vs level-log vs log-level vs log-log
-#
-# 1) lifeexp - gdptot: level-level model without scaling
-ggplot( df , aes(x = confirmedsc, y = death)) +
+```{r , echo = FALSE, fig.height=3.0, warning = FALSE, message = FALSE}
+# The model investigated is: death = alpha + beta * confirmed
+
+# Check the possible different ln transformation for the variables with plotting different scatter- plots with lo(w)ess.
+
+# 1) Nb of death - confirmed cases: level-level model without scaling
+p1 <- ggplot( df , aes(x = confirmed, y = death)) +
   geom_point() +
   geom_smooth(method="loess")+
-  labs(x = "nb of confirmed cases",y = "nb of death") 
+  labs(x = "confirmed cases",y = "nb of death") 
 
-# The pattern seems non-linear and there are some extreme observations, corresponding to China, US, India
-
-# You can change the scale for Total GDP for checking log-transformation
-ggplot( df , aes(x = confirmed, y = death)) +
+# Change the scale for confirmed cases for checking log-transformation
+p2 <- ggplot( df , aes(x = confirmed, y = death)) +
   geom_point() +
   geom_smooth(method="loess")+
-  labs(x = "nb of confirmed cases",y = "nb of death")+
+  labs(x = "confirmed cases,ln scale",y = "nb of death")+
   scale_x_continuous( trans = log_trans(),  breaks = c(1,2,5,10,20,50,100,200,500,1000,10000) )
 
-# You can change the scale for Total GDP and life-expectancy for checking log-log transformation
-ggplot( df , aes(x = confirmed, y = death)) +
+# Change the scale for confirmed cases and nb of death for checking log-log transformation
+p3 <- ggplot( df , aes(x = confirmed, y = death)) +
   geom_point() +
   geom_smooth(method="loess")+
-  labs(x = "nb of confirmed cases",y = "nb of death")+
+  labs(x = "confirmed cases,ln scale",y = "nb of death, ln scale")+
   scale_x_continuous( trans = log_trans(),  breaks = c(1,2,5,10,20,50,100,200,500,1000,10000) )+
   scale_y_continuous( trans = log_trans() )
+
+library(gridExtra)
+grid.arrange(p1, p2, p3 , ncol=3, nrow = 1)
+
 ```
 
-Estimating different models
+For the simple model without scaling the pattern is non-linear, most of observations are concentrated and there are some extreme observations, corresponding to Brazil, US, India.
 
-Presentation of model choice 
+Make a substantive and statistical reasoning, where and when to use ln transformation. You do not need to fit any model here, only use statistical reasoning based on the graphs.
+i. Take care when it is possible to make ln transformation: you may need to drop or change some variables.
+
+ 2) using only gdppc is possible, but need to model the non-linearity in data
+     - Substantive: Level changes is harder to interpret and our aim is not to get $ based comparison
+     - Statistical: log transformation is way better approximation make simplification!
+  3) taking log of confirmed cases and log of death is making the association close to linear!
+ 4) taking log for life-expectancy does not matter -> use levels!
+    - Substantive: it does not give better interpretation
+    - Statistical: you can compare models with the same y, no better fit
+    - Remember: simplest the better!
+
+We should use the log-log transformation, which is the only to provide a linear pattern.
+
+We create new variables which are ln_confirmed and ln_death .
+```{r , include = FALSE}
+# Take Log of gdp/capita and log GDP total
+df <- df %>% mutate( ln_confirmed = log( confirmed ),
+                     ln_death = log( death ) )
+```
+
+## 3. Estimating different models
+I chose the log-log transformation : ln_death = alpha + beta*ln_confirmed
+
+### Simple linear regression
+```{r , echo = FALSE }
+reg1 <- lm_robust (death ~ ln_confirmed  , data = df, se_type = "HC2" )
+summary( reg1 )
+ggplot( data = df, aes( x = ln_confirmed, y = ln_death ) ) + 
+  geom_point( color='blue') +
+  geom_smooth( formula = y ~ poly(x,2) , method = lm , color = 'red' )
+```
+
+### Quadratic regression
+```{r , include = FALSE, out.width = '50%' }
+# Take Log of gdp/capita and log GDP total
+df <- df %>% mutate( ln_confirmed = log( confirmed ),
+                     ln_death = log( death ) )
+```
+
+### Piecewise linear spline regression
+```{r , include = FALSE, out.width = '50%' }
+# Take Log of gdp/capita and log GDP total
+df <- df %>% mutate( ln_confirmed = log( confirmed ),
+                     ln_death = log( death ) )
+```
+
+### Weighted linear regression, using population as weights. 
+```{r , include = FALSE, out.width = '50%' }
+# Take Log of gdp/capita and log GDP total
+df <- df %>% mutate( ln_confirmed = log( confirmed ),
+                     ln_death = log( death ) )
+```
+
+
+### Presentation of model choice 
+(i) Compare the models and choose your preferred one
 
 Hypothesis testing on beta (which interacts with x)
 
