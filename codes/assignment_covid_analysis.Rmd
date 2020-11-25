@@ -11,6 +11,9 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+# Clear memory
+rm(list=ls())
+
 # Load packages
 library(tidyverse)
 require(scales)
@@ -30,16 +33,18 @@ df <- read_csv(paste0(data_in,"clean/covid_pop_10_15_2020_clean.csv"))
 
 ## Introduction
 
-My goal is to analyse the pattern of association between registered covid-19 cases and registered number of death due to covid-19 on **15/10/2020**. 
-My dependent variable (y) is the **number of registered death due to covid** and my explanatory variable (x) is the **number of registered cases**. The aim of the analysis is to create a report on the pattern of association, choose and interpret a regression model and refer to robustness checks.
+- Introduction of the data
 
-Introduction of the dataset and variables
-The aim of this assignment is to guide you through in creating a short report on the pattern of association. You will need to chose your final model, interpret the results and  
+  - Outcome variable: **number of registered death due to covid**
+  - Explanatory variable: **number of registered cases**
+  - Potential data cleaning (1-2 bullet points)
+
+My goal is to analyse the pattern of association between registered covid-19 cases and registered number of death due to covid-19 on **15/10/2020**. 
+The aim of the analysis is to create a report on the pattern of association, choose and interpret a regression model and refer to robustness checks.
+
 ## Executive summary
 
-## 1. Preparatory Data Analysis
-
-### Summary statistics and Distribution for x and y
+## 1. Summary statistics and Distribution for x and y
 
 ```{r , include = FALSE }
 summary(df)
@@ -85,13 +90,14 @@ ggplot(data = df, aes(x=confirmed)) +
 ```
 
 ### Select or drop observations, checking extreme values
-```{r , include = FALSE }
+```{r , inclue = FALSE }
 df %>% filter( confirmed > 2000000, death > 50000 )
 ```
+
 We check countries which have confirmed cases aboves 2 milion and registered number of death above 50,000. These are India, Brazil and United States, which are not measurement errors. We keep these values.
 
-## 2. Investigate the transformation of the variables
-### Scaling, Take Logs?
+## 2. Pattern of association
+### Transformation of the variables: Scaling, Take Logs?
 
 ```{r , echo = FALSE, fig.height=3.0, warning = FALSE, message = FALSE}
 # The model investigated is: death = alpha + beta * confirmed
@@ -142,51 +148,132 @@ We should use the log-log transformation, which is the only to provide a linear 
 
 We create new variables which are ln_confirmed and ln_death .
 ```{r , include = FALSE}
-# Take Log of gdp/capita and log GDP total
+# Take Log 
 df <- df %>% mutate( ln_confirmed = log( confirmed ),
                      ln_death = log( death ) )
+df <- subset(df, ln_death!= -Inf)
 ```
 
 ## 3. Estimating different models
-I chose the log-log transformation : ln_death = alpha + beta*ln_confirmed
+I chose the log transformation : ln_death = alpha + beta*ln_confirmed
 
-### Simple linear regression
-```{r , echo = FALSE }
-reg1 <- lm_robust (death ~ ln_confirmed  , data = df, se_type = "HC2" )
+```{r , include = FALSE }
+# Simple linear regression
+reg1 <- lm_robust (ln_death ~ ln_confirmed  , data = df, se_type = "HC2")
 summary( reg1 )
 ggplot( data = df, aes( x = ln_confirmed, y = ln_death ) ) + 
   geom_point( color='blue') +
+  geom_smooth( method = lm , color = 'red' )
+
+# Quadratic regression
+#  Add powers of the "confirmed" variable to the dataframe:
+df <- df %>% mutate( ln_confirmed_sq = ln_confirmed^2)
+
+reg2 <- lm_robust (ln_death ~ ln_confirmed + ln_confirmed_sq, data = df)
+summary( reg2 )
+ggplot( data = df, aes( x = ln_confirmed, y = ln_death ) ) + 
+  geom_point( color='blue') +
   geom_smooth( formula = y ~ poly(x,2) , method = lm , color = 'red' )
-```
 
-### Quadratic regression
-```{r , include = FALSE, out.width = '50%' }
-# Take Log of gdp/capita and log GDP total
-df <- df %>% mutate( ln_confirmed = log( confirmed ),
-                     ln_death = log( death ) )
-```
+# Regression with piecewise linear spline
+cutoff_ln <- log( 50 )
+reg3<- lm_robust(ln_death ~ lspline( ln_confirmed , cutoff_ln ), data = df )
+summary( reg3 )
+ggplot( data = df, aes( x = ln_confirmed, y = ln_death  ) ) + 
+  geom_point( color='blue') +
+  geom_smooth( formula = y ~ lspline(x,cutoff_ln) , method = lm , color = 'red' )
 
-### Piecewise linear spline regression
-```{r , include = FALSE, out.width = '50%' }
-# Take Log of gdp/capita and log GDP total
-df <- df %>% mutate( ln_confirmed = log( confirmed ),
-                     ln_death = log( death ) )
-```
+# Weighted-OLS
+reg4 <- lm_robust(ln_death ~ ln_confirmed, data = df , weights = population)
+summary( reg4 )
 
-### Weighted linear regression, using population as weights. 
-```{r , include = FALSE, out.width = '50%' }
-# Take Log of gdp/capita and log GDP total
-df <- df %>% mutate( ln_confirmed = log( confirmed ),
-                     ln_death = log( death ) )
+ggplot(data = df, aes(x = ln_confirmed, y = ln_death)) +
+  geom_point(data = df, aes(size=population),  color = 'blue', shape = 16, alpha = 0.6,  show.legend=F) +
+  geom_smooth(aes(weight = population), method = "lm", color='red')
 ```
-
 
 ### Presentation of model choice 
-(i) Compare the models and choose your preferred one
 
-Hypothesis testing on beta (which interacts with x)
+```{r , include = FALSE }
+# Creating model summary with texreg
+data_out <-"~/Documents/GitHub/Assignment-1/out/"
+htmlreg( list(reg1 , reg2 , reg3 , reg4),
+         type = 'html',
+         custom.model.names = c("Linear model","Quadratic model",
+                                "PLS model", "Weighted linear model"),
+         caption = "Modelling number of registered death due to covid and number of confirmed covid cases",
+         file = paste0( data_out ,'model_comparison.html'), include.ci = FALSE)
+```
 
-Analysis of the residuals
+The model comparison (all the estimated model results) is reported in the appendix of the report.
 
-Conclusion
+### Weighted linear regression, using population as weights. 
+```{r , echo = FALSE, fig.height=3.0, fig.width=3.0 }
+# Weighted-OLS
+reg4 <- lm_robust(ln_death ~ ln_confirmed, data = df , weights = population)
+summary( reg4 )
 
+ggplot(data = df, aes(x = ln_confirmed, y = ln_death)) +
+  geom_point(data = df, aes(size=population),  color = 'blue', shape = 16, alpha = 0.6,  show.legend=F) +
+  geom_smooth(aes(weight = population), method = "lm", color='red')
+```
+
+Compare the models and choose your preferred one
+Use substantive and statistical reasoning for your chosen model. ii. Show the model results in the report along with the graph.
+
+## 4. Hypothesis Test and Analysis of the residuals 
+
+```{r , echo = FALSE }
+## Testing hypothesis
+# Let test: H0:beta = 0, HA:beta neq 0 
+summary( reg4 )
+
+# The estimated t-statistics is 14.98, with p-value: 9.286e-33. 
+# Thus we reject the H0, which means that number of recorded death is not uncorrelated with GDP per capita. 
+
+```
+
+The estimated t-statistics is 14.98, with p-value: 9.286e-33. Thus we reject the H0, which means that number of recorded death due to covid is not uncorrelated with number of confirmed covid cases. 
+
+```{r , echo = FALSE }
+# Get the predicted y values from the model
+df$reg4_y_pred <- reg4$fitted.values
+# Calculate the errors of the model
+df$reg4_res <- df$ln_death - df$reg4_y_pred 
+# Find country with largest negative errors
+l1 <- df %>% top_n( -5 , reg4_res ) %>% 
+      select( country , ln_death , reg4_y_pred , reg4_res )
+# Find country with largest positive errors
+u1 <- df %>% top_n( 5 , reg4_res ) %>% 
+       select( country , ln_death , reg4_y_pred , reg4_res )
+
+knitr::kable(l1,caption="Countries with largest negative errors")
+knitr::kable(u1,caption="Countries with largest positive errors")
+```
+
+
+## Conclusion
+
+- We investigated ... 
+- and we have found
+  - X and Y are ... correlated
+  
+- Our analysis can be 
+  - strengthened by...
+  - weakened by...
+  
+## Appendix
+
+```{r, results = 'asis', echo = FALSE}
+texreg(reg1,
+              custom.model.names = c("Linear model","Quadratic model",
+                                "PLS model", "Weighted linear model"),
+       caption = "Modelling number of registered death due to covid and number of confirmed covid cases", 
+       table = FALSE, use.packages = FALSE)
+
+```
+```
+
+
+
+          
