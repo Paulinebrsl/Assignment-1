@@ -1,0 +1,18 @@
+
+<table style="text-align:center"><caption><strong>Modelling number of registered death due to covid and number of confirmed covid cases</strong></caption>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"></td><td colspan="4"><em>Dependent variable:</em></td></tr>
+<tr><td></td><td colspan="4" style="border-bottom: 1px solid black"></td></tr>
+<tr><td style="text-align:left"></td><td colspan="4">ln_death</td></tr>
+<tr><td style="text-align:left"></td><td>Linear model</td><td>Quadratic model</td><td>PLS model</td><td>Weighted linear model</td></tr>
+<tr><td style="text-align:left"></td><td>(1)</td><td>(2)</td><td>(3)</td><td>(4)</td></tr>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">ln_confirmed</td><td>1.031<sup>***</sup> (0.028)</td><td>0.583<sup>***</sup> (0.178)</td><td></td><td>0.953<sup>***</sup> (0.020)</td></tr>
+<tr><td style="text-align:left">ln_confirmed_sq</td><td></td><td>0.022<sup>**</sup> (0.009)</td><td></td><td></td></tr>
+<tr><td style="text-align:left">lspline(ln_confirmed, cutoff_ln)1</td><td></td><td></td><td>-2.309 (1.887)</td><td></td></tr>
+<tr><td style="text-align:left">lspline(ln_confirmed, cutoff_ln)2</td><td></td><td></td><td>1.042<sup>***</sup> (0.029)</td><td></td></tr>
+<tr><td style="text-align:left">Constant</td><td>-4.290<sup>***</sup> (0.291)</td><td>-2.176<sup>**</sup> (0.880)</td><td>8.694 (7.343)</td><td>-3.066<sup>***</sup> (0.260)</td></tr>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">Observations</td><td>170</td><td>170</td><td>170</td><td>170</td></tr>
+<tr><td style="text-align:left">R<sup>2</sup></td><td>0.887</td><td>0.892</td><td>0.889</td><td>0.928</td></tr>
+<tr><td style="text-align:left">Adjusted R<sup>2</sup></td><td>0.887</td><td>0.890</td><td>0.888</td><td>0.928</td></tr>
+<tr><td style="text-align:left">Residual Std. Error</td><td>0.826 (df = 168)</td><td>0.813 (df = 167)</td><td>0.821 (df = 167)</td><td>4,289.901 (df = 168)</td></tr>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"><em>Note:</em></td><td colspan="4" style="text-align:right"><sup>*</sup>p<0.1; <sup>**</sup>p<0.05; <sup>***</sup>p<0.01</td></tr>
+</table>

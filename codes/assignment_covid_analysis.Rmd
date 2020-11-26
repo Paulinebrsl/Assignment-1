@@ -5,7 +5,6 @@ author: "Pauline Broussolle"
 output: 
   pdf_document:
   toc: true
-  toc_depth: 2
 ---
 
 ```{r setup, include=FALSE}
@@ -31,13 +30,11 @@ data_in <- "~/Documents/GitHub/Assignment-1/data/"
 df <- read_csv(paste0(data_in,"clean/covid_pop_10_15_2020_clean.csv"))
 ```
 
-## Introduction
+We analyse covid data from CSSE at Johns Hopkins University and population data for 2019 from World Bank (using WDI). The dataset contains 182 countries and registers the number of confirmed covid-19 cases and number of death due by covid on 15/10/2020.
 
-We analyse covid data from CSSE at Johns Hopkins University and we use also population data for 2019 from World Bank (using WDI). The dataset contains 182 countries and registers the number of confirmed covid cases and number of death due by covid on 15/10/2020.
+The aim of the analysis is to find the pattern of association between registered covid-19 cases and registered number of death due to covid-19 on **15/10/2020**. My outcome variable (y) is the **number of registered death due to covid** and my explanatory variable (x) is the **number of registered cases**. 
 
-My outcome variable is the **number of registered death due to covid** and my explanatory variable: **number of registered cases**. My goal is to analyse the pattern of association between registered covid-19 cases and registered number of death due to covid-19 on **15/10/2020**. 
-
-## Executive summary
+**Executive summary:** The number of registered death due to covid and the number of registered covid cases are positively correlated. According to our analysis, countries with 10% more recorded covid cases have on average 9.5% more death due to covid.
 
 ## 1. Summary statistics and Distribution for x and y
 
@@ -45,8 +42,6 @@ My outcome variable is the **number of registered death due to covid** and my ex
 glimpse (df)
 summary(df)
 ```
-
-
 ```{r , echo = FALSE }
 confirmed_cases <- df %>% 
   summarise(
@@ -69,34 +64,31 @@ summary <- confirmed_cases %>% add_row( nb_of_death)
 summary <- mutate (summary, variable = c("confirmed cases" , "nb of death"))
 knitr::kable(summary,caption="Summary for the number of registered death caused by covid and registered covid cases")
 ```
- 
 ```{r , echo = FALSE, out.width = '50%' }
 # Histograms
+ggplot(data = df, aes(x=confirmed)) + 
+  geom_histogram(binwidth =300000, fill= "darkorange",col="black", alpha=0.7)+
+  labs(x="number of registered covid cases", y="Absolute Frequency") +
+  theme_bw()
+
 ggplot(data = df, aes(x=death)) + 
   geom_histogram(binwidth =5000,fill= "darkorange", col="black", alpha=0.7)+
   labs(x="number of registered death due to covid", y="Absolute Frequency") +
   theme_bw()
-
-ggplot(data = df, aes(x=confirmed)) + 
-  geom_histogram(binwidth =100000, fill= "darkorange",col="black", alpha=0.7)+
-  labs(x="number of registered covid cases", y="Absolute Frequency") +
-  theme_bw()
 ```
 
-2-3 sentence, explain the main features and distribution - use histograms and summary statistics table (mean, median, min, max, standard deviation)
-We see that there are a few extreme values.
+The "Confirmed" variable is the count of confirmed covid cases reported for one day and for each country. "Death" variable is the count of reported death due to covid for one day and for each country. Both distributions are skewed with long right tails. The 2 modes are located on low values, but we see that there are a few extreme values. 
 
-### Chech extreme values
-```{r , include = FALSE }
-df %>% filter( confirmed > 2000000, death > 50000 )
+```{r , echo = FALSE }
+d1 <- df %>% filter( confirmed > 2000000, death > 50000 )
+knitr::kable(d1,caption="Extreme values")
 ```
 
-We check countries which have confirmed cases aboves 2 milion and registered number of death above 50,000. These are India, Brazil and United States, which are not measurement errors. We keep these values.
+We check countries which recorded confirmed covid cases above 2 milion and registered death above 50,000. These are India, Brazil and United States, which are not measurement errors. We keep these values.
 
 ## 2. Pattern of association
-### Transformation of the variables: Scaling, Take Logs?
 
-```{r , echo = FALSE, fig.height=3.0, warning = FALSE, message = FALSE}
+```{r , echo = FALSE, fig.height=2.0, warning = FALSE, message = FALSE}
 # The model investigated is: death = alpha + beta * confirmed
 
 # Check the possible different ln transformation for the variables with plotting different scatter- plots with lo(w)ess.
@@ -105,45 +97,38 @@ We check countries which have confirmed cases aboves 2 milion and registered num
 p1 <- ggplot( df , aes(x = confirmed, y = death)) +
   geom_point() +
   geom_smooth(method="loess")+
-  labs(x = "confirmed cases",y = "nb of death") 
+  labs(x = "registered cases",y = "nb of death", title="Level-level model")+
+  theme(text = element_text(size = 9))
 
 # Change the scale for confirmed cases for checking log-transformation
 p2 <- ggplot( df , aes(x = confirmed, y = death)) +
   geom_point() +
   geom_smooth(method="loess")+
-  labs(x = "confirmed cases,ln scale",y = "nb of death")+
-  scale_x_continuous( trans = log_trans(),  breaks = c(1,2,5,10,20,50,100,200,500,1000,10000) )
+  labs(x = "registered cases,ln scale",y = "nb of death", title="Level-log model")+
+  scale_x_continuous( trans = log_trans(),  breaks = c(1,2,5,10,20,50,100,200,500,1000,10000) )+
+  theme(text = element_text(size = 9))
 
 # Change the scale for confirmed cases and nb of death for checking log-log transformation
 p3 <- ggplot( df , aes(x = confirmed, y = death)) +
   geom_point() +
   geom_smooth(method="loess")+
-  labs(x = "confirmed cases,ln scale",y = "nb of death, ln scale")+
+  labs(x = "registered cases,ln scale",y = "nb of death, ln scale", title="Log-log model")+
   scale_x_continuous( trans = log_trans(),  breaks = c(1,2,5,10,20,50,100,200,500,1000,10000) )+
-  scale_y_continuous( trans = log_trans() )
+  scale_y_continuous( trans = log_trans() )+
+  theme(text = element_text(size = 9))
 
 library(gridExtra)
 grid.arrange(p1, p2, p3 , ncol=3, nrow = 1)
 
 ```
 
-For the simple model without scaling the pattern is non-linear, most of observations are concentrated and there are some extreme observations, corresponding to Brazil, US, India.
-
-Make a substantive and statistical reasoning, where and when to use ln transformation. You do not need to fit any model here, only use statistical reasoning based on the graphs.
-i. Take care when it is possible to make ln transformation: you may need to drop or change some variables.
-
- 2) using only gdppc is possible, but need to model the non-linearity in data
-     - Substantive: Level changes is harder to interpret and our aim is not to get $ based comparison
-     - Statistical: log transformation is way better approximation make simplification!
-  3) taking log of confirmed cases and log of death is making the association close to linear!
- 4) taking log for life-expectancy does not matter -> use levels!
-    - Substantive: it does not give better interpretation
-    - Statistical: you can compare models with the same y, no better fit
-    - Remember: simplest the better!
-
-
+We check the possible different ln transformation for the variables with plotting different scatterplots with lowess. 
+For the simple model without scaling and for the level-log model, the pattern are non-linear, most of observations are concentrated on the bottom and there are some extreme observations corresponding to Brazil, US and India.
+Taking log of confirmed cases and log of death creates a linear association.
+- Substantive reasoning: easier to interpret.
+- Statistical: it gives a better approximation to the average slope of the pattern.
 We should use the log-log transformation, which is the only to provide a linear pattern.
-We create new variables which are ln_confirmed and ln_death .
+We create new variables for log of the two variables: ln_confirmed and ln_death .
 ```{r , include = FALSE}
 # Take Logs 
 df <- df %>% mutate( ln_confirmed = log( confirmed ),
@@ -152,11 +137,11 @@ df <- subset(df, ln_death!= -Inf)
 ```
 
 ## 3. Estimating different models
-We choose the log transformation. We estimate four different regression models: Simple linear regression, Quadratic regression, Piecewise linear spline regression, Weighted linear regression (using population as weights).
+We estimate four different regression models: Simple linear regression, Quadratic regression, Piecewise linear spline regression, Weighted linear regression using population as weights. The estimated model results are reported in the appendix of the report.
 
 ```{r , include = FALSE }
 # Simple linear regression
-reg1 <- lm_robust (ln_death ~ ln_confirmed  , data = df, se_type = "HC2")
+reg1 <- lm (ln_death ~ ln_confirmed  , data = df)
 summary( reg1 )
 ggplot( data = df, aes( x = ln_confirmed, y = ln_death ) ) + 
   geom_point( color='blue') +
@@ -166,7 +151,7 @@ ggplot( data = df, aes( x = ln_confirmed, y = ln_death ) ) +
 #  Add powers of the "confirmed" variable to the dataframe:
 df <- df %>% mutate( ln_confirmed_sq = ln_confirmed^2)
 
-reg2 <- lm_robust (ln_death ~ ln_confirmed + ln_confirmed_sq, data = df)
+reg2 <- lm(ln_death ~ ln_confirmed + ln_confirmed_sq, data = df)
 summary( reg2 )
 ggplot( data = df, aes( x = ln_confirmed, y = ln_death ) ) + 
   geom_point( color='blue') +
@@ -174,65 +159,64 @@ ggplot( data = df, aes( x = ln_confirmed, y = ln_death ) ) +
 
 # Regression with piecewise linear spline
 cutoff_ln <- log( 50 )
-reg3<- lm_robust(ln_death ~ lspline( ln_confirmed , cutoff_ln ), data = df )
+reg3<- lm(ln_death ~ lspline( ln_confirmed , cutoff_ln ), data = df )
 summary( reg3 )
 ggplot( data = df, aes( x = ln_confirmed, y = ln_death  ) ) + 
   geom_point( color='blue') +
   geom_smooth( formula = y ~ lspline(x,cutoff_ln) , method = lm , color = 'red' )
 
 # Weighted-OLS
-reg4 <- lm_robust(ln_death ~ ln_confirmed, data = df , weights = population)
+reg4 <- lm(ln_death ~ ln_confirmed, data = df , weights = population)
 summary( reg4 )
 
 ggplot(data = df, aes(x = ln_confirmed, y = ln_death)) +
   geom_point(data = df, aes(size=population),  color = 'blue', shape = 16, alpha = 0.6,  show.legend=F) +
   geom_smooth(aes(weight = population), method = "lm", color='red')
 ```
-
-### Presentation of model choice 
-
 ```{r , include = FALSE }
 # Creating model summary with texreg
 data_out <-"~/Documents/GitHub/Assignment-1/out/"
 htmlreg( list(reg1 , reg2 , reg3 , reg4),
          type = 'html',
+         digits = 3,
          custom.model.names = c("Linear model","Quadratic model",
                                 "PLS model", "Weighted linear model"),
          caption = "Modelling number of registered death due to covid and number of confirmed covid cases",
          file = paste0( data_out ,'model_comparison.html'), include.ci = FALSE)
 ```
 
-The model comparison (all the estimated model results) is reported in the appendix of the report.
+Based on model comparison we choose **Weighted linear regression model, using population as weights** (reg4). This regression has the higher R-squared out of the 4 models, which is 0.928. The coefficients can be well interpreted and an advantage is that the scatterplot for weighted regression shows the size of each country as the circles are proportionate to the population.
 
-The best model is Weighted linear regression, using population as weights:
-reg4: ln_death = alpha + beta * ln_confirmed, weights: population
-```{r , echo = FALSE, fig.height=3.0, fig.width=3.0 }
+```{r, results = 'asis', echo = FALSE}
 # Weighted-OLS
-reg4 <- lm_robust(ln_death ~ ln_confirmed, data = df , weights = population)
-summary( reg4 )
+reg4 <- lm(ln_death ~ ln_confirmed, data = df , weights = population)
+texreg(reg4,
+              custom.model.names = c("Weighted linear regression, using population as weights"),
+       table = FALSE, use.packages = FALSE)
 
+```
+```{r , echo = FALSE, fig.height=3.0, message=FALSE,fig.align='center' }
+# Visualization
 ggplot(data = df, aes(x = ln_confirmed, y = ln_death)) +
   geom_point(data = df, aes(size=population),  color = 'blue', shape = 16, alpha = 0.6,  show.legend=F) +
-  labs(x = "confirmed cases,ln scale",y = "nb of death, ln scale", title="Weighted linear regression, using population as weights")+
-  geom_smooth(aes(weight = population), method = "lm", color='red')
-```
+  labs(x = "registered cases,ln scale",y = "nb of death, ln scale", title="Weighted linear regression, using population as weights")+
+  geom_smooth(aes(weight = population), method = "lm", color='red')+
+  theme(text = element_text(size = 10))
 
-Compare the models and choose your preferred one
-Use substantive and statistical reasoning for your chosen model. ii. Show the model results in the report along with the graph.
+```
 
 ## 4. Hypothesis Test and Analysis of the residuals 
 
-```{r , echo = FALSE }
+```{r , include = FALSE }
 ## Testing hypothesis
 # Let test: H0:beta = 0, HA:beta neq 0 
 summary( reg4 )
 
 # The estimated t-statistics is 14.98, with p-value: 9.286e-33. 
 # Thus we reject the H0, which means that number of recorded death is not uncorrelated with GDP per capita. 
-
 ```
 
-The estimated t-statistics is 14.98, with p-value: 9.286e-33. Thus we reject the H0, which means that number of recorded death due to covid is not uncorrelated with number of confirmed covid cases. 
+We test our Beta parameter, carrying out the fellowing test: H0 :Beta=0, HA :Beta neq 0. The estimated t-statistics is 14.98, with p-value: 9.286e-33. Thus we reject the H0, which means that number of recorded death due to covid is not uncorrelated with number of confirmed covid cases. 
 
 ```{r , echo = FALSE }
 # Get the predicted y values from the model
@@ -250,25 +234,27 @@ knitr::kable(l1,caption="Countries with largest negative errors")
 knitr::kable(u1,caption="Countries with largest positive errors")
 ```
 
-
 ## Conclusion
 
-- We investigated ... 
-- and we have found
-  - X and Y are ... correlated
-  
-- Our analysis can be 
-  - strengthened by...
-  - weakened by...
+We investigated registered death due to covid and number of confirmed covid cases pattern of association. The slope for our chosen model is 0.953. This shows that countries with 10% more recorded covid cases have on average 9.5% more death due to covid. Our two variables X and Y are positively correlated. The analysis helps us to identify countries with unexpectedly low and unexpectedly low mortality number due to covid.
   
 ## Appendix
 
-```{r, results = 'asis', echo = FALSE}
-texreg(reg1,
-              custom.model.names = c("Linear model"),
-       table = FALSE, use.packages = FALSE)
+```{r, echo = FALSE, results = 'asis', message=FALSE}
+library(stargazer)
 
-```
+stargazer(reg1, reg2, reg3, reg4,  p.auto = FALSE, 
+          no.space = TRUE,
+          single.row=TRUE, 
+          column.labels = c("Linear model","Quadratic model",
+                            "PLS model", "Weighted linear model"),
+          column.sep.width = "1pt",
+          font.size = "small",
+          omit.stat = "f",
+          title="Modelling number of registered death due to covid and number of confirmed covid cases",
+          out="model_comparison1.html")
+
+
 ```
 
 
